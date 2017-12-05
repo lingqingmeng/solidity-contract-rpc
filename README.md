@@ -1,4 +1,4 @@
-# solidity-hello-world
+# solidity-contract-rpc
 
 ## Prereqs
 Tested on OSX Sierra 10.12.xxx and Ubuntu 16.04
