@@ -37,7 +37,7 @@ let addressOfCrowdsale;
         string tokenName,
         string tokenSymbol
 */
-const initialTokenSupply = 250;
+const initialTokenSupply = 4000;
 const tokenName = 'TestToken';
 const tokenSymbol = 'TTKN';
 const tokenDeployerAddress =  web3.eth.accounts[1];
@@ -54,7 +54,7 @@ tokenContractInstance = Token.contract.new(initialTokenSupply, tokenName, tokenS
   }
   if (res.address && res.transactionHash) {
     addressOfToken = res.address;
-    console.log('Token Deployed!');
+    console.log('Token Deployed @', addressOfToken);
     deployCrowdsaleContract();
     // testToken(Token.contract, addressOfToken);
   } else {
@@ -72,7 +72,7 @@ tokenContractInstance = Token.contract.new(initialTokenSupply, tokenName, tokenS
 */
 const fundingGoalInEthers = 250;
 const durationInMinutes = 200;
-const etherCostOfEachToken = .01;
+const etherCostOfEachToken = 2;
 
 function deployCrowdsaleContract() {
   console.log('Deploying Crowdsale...')
@@ -82,8 +82,8 @@ function deployCrowdsaleContract() {
     etherCostOfEachToken, 
     addressOfToken, {
       gas: crowdsaleGasEstimate,
-      data: '0x' + Token.bytecode,
-      from: web3.eth.accounts[1],
+      data: '0x' + Crowdsale.bytecode,
+      from: web3.eth.accounts[5],
   }, (err, res) => {
     if (err) {
       console.error('ERROR DEPLOYING CROWDSALE');
@@ -92,9 +92,9 @@ function deployCrowdsaleContract() {
     }
     if (res.address && res.transactionHash) {
       addressOfCrowdsale = res.address;
-      console.log('Crowdsale Deployed!');
+      console.log('Crowdsale Deployed @', addressOfCrowdsale);
       // Send tokens to crowdsource contract
-      transferTokensToCrowdsource(Token.contract, addressOfToken, tokenDeployerAddress, initialTokenSupply);
+      transferTokensToCrowdsource(Token.contract, addressOfToken, tokenDeployerAddress, initialTokenSupply/10);
     } else {
       console.log('Waiting to receive Crowdsale contract address...');
     }
@@ -103,8 +103,8 @@ function deployCrowdsaleContract() {
 
 function transferTokensToCrowdsource(tokenContract, tokenAddress, fromAddress, amount) {
   const token = tokenContract.at(tokenAddress);
-  const amountScaled = BigNumber(DECIMALS).mult(initialTokenSupply);
-  token.transfer(addressOfCrowdsale, Number(amountScaled.toString()), {from: fromAddress}, (err, res) => {
+  const amountScaled = BigNumber(DECIMALS).mult(amount);
+  token.transfer(addressOfCrowdsale, amountScaled.toString(), {from: fromAddress}, (err, res) => {
     console.log('Transfering Tokens to Crowdsale...');
     console.log('tx: ' + res);
     if (err) {
@@ -119,16 +119,12 @@ function transferTokensToCrowdsource(tokenContract, tokenAddress, fromAddress, a
 
 
 function testToken(contract, address) {
-  console.log('Token Address:', address);
-
   // Testing Transfering 17 tokens...
   testTokenTransferFunction(contract, address, web3.eth.accounts[1], web3.eth.accounts[2], 17);
 }
 
 function testCrowdsale(crowdContract, crowdsaleAddress, tokenContract, tokenAddress) {
-  console.log('Crowdsale Address:', crowdsaleAddress);
-
-  testSendingEtherToCrowdsale(crowdContract, crowdsaleAddress, tokenContract, tokenAddress, web3.eth.accounts[4], .5);
+  testSendingEtherToCrowdsale(crowdContract, crowdsaleAddress, tokenContract, tokenAddress, web3.eth.accounts[3], 6);
 
 }
 
@@ -137,13 +133,19 @@ function testSendingEtherToCrowdsale(crowdContract, crowdsaleAddress, tokenContr
   console.log('-----------------');
   console.log('Testing Sending Ether To Crowdsale...');
   
-  const crowdsource = crowdContract.at(crowdsaleAddress);
+  const crowdsale = crowdContract.at(crowdsaleAddress);
   const token = tokenContract.at(tokenAddress);
 
-  const initialContractEtherBalance = BigNumber(web3.eth.getBalance(crowdsaleAddress));
+  const initialCrowdsaleEtherBalance = BigNumber(web3.eth.getBalance(crowdsaleAddress));
   const initialFromTokenBalance = BigNumber(token.balanceOf(fromAddress));
-  console.log('Initial Contract Ether Balance:', BigNumber(initialContractEtherBalance).div(DECIMALS).toString());
+  console.log('Initial Contract Ether Balance:', BigNumber(initialCrowdsaleEtherBalance).div(DECIMALS).toString());
   console.log('Initial FROM Token Balance:', BigNumber(initialFromTokenBalance).div(DECIMALS).toString());
+
+  const initialContractTokenBalance = BigNumber(token.balanceOf(crowdsaleAddress));
+  const initialFromEtherBalance = BigNumber(web3.eth.getBalance(fromAddress));
+  console.log('~~~~~~~');
+  console.log('CONTRACT TOKENS:', BigNumber(initialContractTokenBalance).div(DECIMALS).toString())
+  console.log('FROM ETHER:', BigNumber(initialFromEtherBalance).div(DECIMALS).toString())
 
   // Transfer Ether
   const txObject = {
@@ -151,6 +153,9 @@ function testSendingEtherToCrowdsale(crowdContract, crowdsaleAddress, tokenContr
     to: crowdsaleAddress,
     value: web3.toWei(amount, 'ether'),
   };
+
+  // console.log(crowdsale.tokenReward());
+  
   web3.eth.sendTransaction(txObject,(err,res) => {
     console.log('tx:', res);
     if (err) {
@@ -159,15 +164,14 @@ function testSendingEtherToCrowdsale(crowdContract, crowdsaleAddress, tokenContr
       return;
     }
     //Assert Results
-    const expectedFinalContractEtherBalance = BigNumber(initialContractEtherBalance).add(web3.toWei(amount, 'ether'));
-    const expectedFinalFromTokenBalance = BigNumber(initialFromTokenBalance)
-        .add(BigNumber(amount/etherCostOfEachToken).mult(BigNumber(DECIMALS)));
-    const actualFinalContractEtherBalance = BigNumber(web3.eth.getBalance(crowdsaleAddress));
+    const expectedFinalCrowdsaleEtherBalance = BigNumber(initialCrowdsaleEtherBalance).add(web3.toWei(amount, 'ether'));
+    const expectedFinalFromTokenBalance = BigNumber(initialFromTokenBalance).add(BigNumber(amount/etherCostOfEachToken).mult(BigNumber(DECIMALS)));
+    const actualFinalCrowdsaleEtherBalance = BigNumber(web3.eth.getBalance(crowdsaleAddress));
     const actualFinalFromTokenBalance = BigNumber(token.balanceOf(fromAddress));
 
-    console.log('Except Final Contract Ether Balance:', expectedFinalContractEtherBalance.div(DECIMALS).toString());
-    console.log('Except Final FROM Token Balance:', expectedFinalFromTokenBalance.div(DECIMALS).toString());
-    console.log('Actual Final Contract Ether Balance:', actualFinalContractEtherBalance.div(DECIMALS).toString());
+    console.log('Expected Final Contract Ether Balance:', expectedFinalCrowdsaleEtherBalance.div(DECIMALS).toString());
+    console.log('Expected Final FROM Token Balance:', expectedFinalFromTokenBalance.div(DECIMALS).toString());
+    console.log('Actual Final Contract Ether Balance:', actualFinalCrowdsaleEtherBalance.div(DECIMALS).toString());
     console.log('Actual Final FROM Token Balance:', actualFinalFromTokenBalance.div(DECIMALS).toString());
   });
 }
@@ -188,7 +192,7 @@ function testTokenTransferFunction(contract, contractAddress, fromAddress, toAdd
   console.log('Initial Balance To:', BigNumber(initialBalanceTo).div(DECIMALS).toString());
 
   // Call the transfer function
-  token.transfer(toAddress, Number(amountScaled.toString()), {from: fromAddress}, (err, res) => {
+  token.transfer(toAddress, amountScaled.toString(), {from: fromAddress}, (err, res) => {
     console.log('tx: ' + res);
     if (err) {
       console.error('TRANSFER FUNCTION ERROR!');
