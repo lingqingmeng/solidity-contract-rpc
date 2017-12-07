@@ -7,6 +7,7 @@ const Web3 = require('web3');
 // this should be testrpc, run it with $ testrpc
 const web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
 const compilers = require('./compilers');
+const BigNumber = require('big-number');
 
 // read files and create contracts for Token and Crowdsale
 const tokenFile = fs.readFileSync('TokenERC20.sol');
@@ -14,20 +15,20 @@ const crowdsaleFile = fs.readFileSync('Crowdsale.sol');
 const Token = compilers.createContract(tokenFile,'TokenERC20');
 const Crowdsale = compilers.createContract(crowdsaleFile, 'Crowdsale');
 
-// Token decimal places
-const DECIMAL_PLACES = 18;
+// Token 18 decimal places
+const DECIMALS = '1000000000000000000';
 
 // other useful things
 const getBalance = (acct) => web3.fromWei(web3.eth.getBalance(acct), 'ether').toNumber();
 const balances = web3.eth.accounts.map(account => getBalance(account))
-console.log('balances:',balances);
+// console.log('balances:',balances);
 
 // takes in byte code of compiled contract Token.sol
 let tokenGasEstimate = web3.eth.estimateGas({data: '0x'+Token.bytecode});
 let crowdsaleGasEstimate = web3.eth.estimateGas({data: '0x'+Crowdsale.bytecode});
 
-// Deploy Token Contract
-const tokenContractInstance = Token.contract.new(10, 'TestToken', 'TTKN', {
+// Deploy Token Contract with initial supply of 234 tokens
+const tokenContractInstance = Token.contract.new(234, 'TestToken', 'TTKN', {
   gas: tokenGasEstimate*2,
   data: '0x' + Token.bytecode,
   from: web3.eth.accounts[1],
@@ -49,7 +50,7 @@ const tokenContractInstance = Token.contract.new(10, 'TestToken', 'TTKN', {
 function testToken(contract, address){
   console.log('Token Address:', address);
 
-  // Testing Transfering 55 tokens...
+  // Testing Transfering 17 tokens...
   testTransferFunction(contract, address, web3.eth.accounts[1], web3.eth.accounts[2], 17);
 }
 
@@ -59,17 +60,15 @@ function testTransferFunction(contract, contractAddress, fromAddress, toAddress,
   // Reference to the deployed contract
   const token = contract.at(contractAddress);
 
-  const amountScaled = amount*(10^DECIMAL_PLACES);
+  const amountScaled = BigNumber(DECIMALS).mult(amount);
 
-console.log(token.balanceOf(fromAddress));
-
-  const initialBalanceFrom = Number(token.balanceOf(fromAddress));
-  const initialBalanceTo = Number(token.balanceOf(toAddress));
-  console.log('Initial Balance From:', initialBalanceFrom/(10^DECIMAL_PLACES));
-  console.log('Initial Balance To:', initialBalanceTo/(10^DECIMAL_PLACES));
+  const initialBalanceFrom = BigNumber(token.balanceOf(fromAddress));
+  const initialBalanceTo = BigNumber(token.balanceOf(toAddress));
+  console.log('Initial Balance From:', BigNumber(initialBalanceFrom).div(DECIMALS).toString());
+  console.log('Initial Balance To:', BigNumber(initialBalanceTo).div(DECIMALS).toString());
 
   // Call the transfer function
-  token.transfer(toAddress, amountScaled, {from: fromAddress}, (err, res) => {
+  token.transfer(toAddress, Number(amountScaled.toString()), {from: fromAddress}, (err, res) => {
     console.log('tx: ' + res);
     if (err) {
       console.error('TRANSFER FUNCTION ERROR!');
@@ -77,17 +76,18 @@ console.log(token.balanceOf(fromAddress));
       return;
     }
     // Assert results
-    const expectedFinalBalanceFrom = initialBalanceFrom - amountScaled;
-    const expectedFinalBalanceTo = initialBalanceTo + amountScaled;
-    const actualFinalBalanceFrom = Number(token.balanceOf(fromAddress));
-    const actualFinalBalanceTo = Number(token.balanceOf(toAddress));
+    const expectedFinalBalanceFrom = BigNumber(initialBalanceFrom).subtract(amountScaled);
+    const expectedFinalBalanceTo = BigNumber(initialBalanceTo).add(amountScaled);
+    const actualFinalBalanceFrom = BigNumber(token.balanceOf(fromAddress));
+    const actualFinalBalanceTo = BigNumber(token.balanceOf(toAddress));
 
-    console.log('Expected Final Balance From:', expectedFinalBalanceFrom/(10^DECIMAL_PLACES));
-    console.log('Expected Final Balance To:', expectedFinalBalanceTo/(10^DECIMAL_PLACES));
-    console.log('Actual Final Balance From:', actualFinalBalanceFrom/(10^DECIMAL_PLACES));
-    console.log('Actual Final Balance To:', actualFinalBalanceTo/(10^DECIMAL_PLACES));
+    console.log('Expected Final Balance From:', expectedFinalBalanceFrom.div(DECIMALS).toString());
+    console.log('Expected Final Balance To:', expectedFinalBalanceTo.div(DECIMALS).toString());
+    console.log('Actual Final Balance From:', actualFinalBalanceFrom.div(DECIMALS).toString());
+    console.log('Actual Final Balance To:', actualFinalBalanceTo.div(DECIMALS).toString());
 
-    if ((expectedFinalBalanceFrom == actualFinalBalanceFrom) && (expectedFinalBalanceTo == actualFinalBalanceTo)) {
+    if ((expectedFinalBalanceFrom.toString() === actualFinalBalanceFrom.toString()) &&
+        (expectedFinalBalanceTo.toString() == actualFinalBalanceTo.toString())) {
       console.log('Transfer Function Test Successful');
       return true;
     } else {

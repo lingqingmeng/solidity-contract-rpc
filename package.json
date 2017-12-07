@@ -20,6 +20,7 @@
   "author": "lingqingmeng",
   "license": "ISC",
   "dependencies": {
+    "big-number": "^0.4.0",
     "solc": "^0.4.16",
     "web3": "0.20.0"
   },
