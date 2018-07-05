@@ -23,7 +23,7 @@ let addressOfToken;
 const tokenContractInstance = Token.contract.new({
   gas: tokenGasEstimate,
   data: '0x' + Token.bytecode,
-  from: web3.eth.accounts[1] //web3.eth.coinbase
+  from: web3.eth.accounts[0] //web3.eth.coinbase
 }, (err, res) => {
   if (err) {
     console.log('err:',err);
@@ -38,12 +38,8 @@ const tokenContractInstance = Token.contract.new({
     return;
   }
   console.log('Token address: ' + res.address);
-  addressOfToken = res.address; // yolo 
+  addressOfToken = res.address; // 
   // Let's test the deployed contract
-
-  // testContract(Token.contract,res.address);
-  // testCall(Token.contract,res.address);
-  // testApprove(Token.contract,res.address);
   testAllowances(Token.contract,res.address);
 
 
@@ -76,7 +72,9 @@ const tokenContractInstance = Token.contract.new({
     // If we have an address property, the contract was deployed
     if (response.address) {
       console.log('Crowdsale contract address: ' + response.address);
-      testCrowdSale2(Crowdsale.contract,response.address)
+      const token = Token.contract.at(res.address);
+      testCrowdSale2(Crowdsale.contract,response.address) 
+      
     }
   })
   
