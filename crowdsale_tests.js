@@ -40,7 +40,7 @@ let addressOfCrowdsale;
 const initialTokenSupply = 250;
 const tokenName = 'TestToken';
 const tokenSymbol = 'TTKN';
-const tokenDeployerAddress =  web3.eth.accounts[1];
+const tokenDeployerAddress =  web3.eth.accounts[0];
 console.log('Deploying Token...');
 tokenContractInstance = Token.contract.new(initialTokenSupply, tokenName, tokenSymbol, {
   gas: tokenGasEstimate,
@@ -83,7 +83,7 @@ function deployCrowdsaleContract() {
     addressOfToken, {
       gas: crowdsaleGasEstimate,
       data: '0x' + Token.bytecode,
-      from: web3.eth.accounts[1],
+      from: web3.eth.accounts[0],
   }, (err, res) => {
     if (err) {
       console.error('ERROR DEPLOYING CROWDSALE');
@@ -122,13 +122,13 @@ function testToken(contract, address) {
   console.log('Token Address:', address);
 
   // Testing Transfering 17 tokens...
-  testTokenTransferFunction(contract, address, web3.eth.accounts[1], web3.eth.accounts[2], 17);
+  testTokenTransferFunction(contract, address, web3.eth.accounts[1], web3.eth.accounts[0], 17);
 }
 
 function testCrowdsale(crowdContract, crowdsaleAddress, tokenContract, tokenAddress) {
   console.log('Crowdsale Address:', crowdsaleAddress);
 
-  testSendingEtherToCrowdsale(crowdContract, crowdsaleAddress, tokenContract, tokenAddress, web3.eth.accounts[4], .5);
+  testSendingEtherToCrowdsale(crowdContract, crowdsaleAddress, tokenContract, tokenAddress, web3.eth.accounts[0], 1);
 
 }
 
@@ -136,7 +136,8 @@ function testCrowdsale(crowdContract, crowdsaleAddress, tokenContract, tokenAddr
 function testSendingEtherToCrowdsale(crowdContract, crowdsaleAddress, tokenContract, tokenAddress, fromAddress, amount) {
   console.log('-----------------');
   console.log('Testing Sending Ether To Crowdsale...');
-  
+  const ff = web3.eth.getBalance(fromAddress);
+  console.log('ff:',ff);
   const crowdsource = crowdContract.at(crowdsaleAddress);
   const token = tokenContract.at(tokenAddress);
 
@@ -146,11 +147,15 @@ function testSendingEtherToCrowdsale(crowdContract, crowdsaleAddress, tokenContr
   console.log('Initial FROM Token Balance:', BigNumber(initialFromTokenBalance).div(DECIMALS).toString());
 
   // Transfer Ether
+
+  console.log('crowdsource.address:',crowdsource.address);
   const txObject = {
     from: fromAddress,
-    to: crowdsaleAddress,
-    value: web3.toWei(amount, 'ether'),
+    to: crowdsource.address,
+    value: "10",
+    gas: 980033
   };
+  console.log("txObject:",txObject);
   web3.eth.sendTransaction(txObject,(err,res) => {
     console.log('tx:', res);
     if (err) {

@@ -43,13 +43,13 @@ contract Crowdsale {
      *
      * The function without name is the default function that is called whenever anyone sends funds to a contract
      */
-    function () payable {
-        require(!crowdsaleClosed);
+    function () public payable {
+        
         uint amount = msg.value;
         balanceOf[msg.sender] += amount;
         amountRaised += amount;
-        tokenReward.transfer(msg.sender, amount / price);
-        FundTransfer(msg.sender, amount, true);
+        // tokenReward.transfer(msg.sender, 3);
+        // FundTransfer(msg.sender, amount, true);
     }
 
     modifier afterDeadline() { if (now >= deadline) _; }
