@@ -5,7 +5,7 @@
 const fs = require('fs');
 const Web3 = require('web3');
 // this should be testrpc, run it with $ testrpc
-const web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
+const web3 = new Web3(new Web3.providers.HttpProvider('http://127.0.0.1:7545'));
 const compilers = require('./compilers');
 const BigNumber = require('big-number');
 
@@ -15,8 +15,11 @@ const crowdsaleFile = fs.readFileSync('Crowdsale.sol');
 const Token = compilers.createContract(tokenFile,'TokenERC20');
 const Crowdsale = compilers.createContract(crowdsaleFile, 'Crowdsale');
 
-// Token 18 decimal places
+
 const DECIMALS = '1000000000000000000';
+
+
+
 
 // other useful things
 const getBalance = (acct) => web3.fromWei(web3.eth.getBalance(acct), 'ether').toNumber();
@@ -42,6 +45,7 @@ const tokenName = 'TestToken';
 const tokenSymbol = 'TTKN';
 const tokenDeployerAddress =  web3.eth.accounts[0];
 console.log('Deploying Token...');
+
 tokenContractInstance = Token.contract.new(initialTokenSupply, tokenName, tokenSymbol, {
   gas: tokenGasEstimate,
   data: '0x' + Token.bytecode,
@@ -104,7 +108,7 @@ function deployCrowdsaleContract() {
 function transferTokensToCrowdsource(tokenContract, tokenAddress, fromAddress, amount) {
   const token = tokenContract.at(tokenAddress);
   const amountScaled = BigNumber(DECIMALS).mult(initialTokenSupply);
-  token.transfer(addressOfCrowdsale, Number(amountScaled.toString()), {from: fromAddress}, (err, res) => {
+  token.transfer(addressOfCrowdsale, amountScaled , {from: fromAddress}, (err, res) => {
     console.log('Transfering Tokens to Crowdsale...');
     console.log('tx: ' + res);
     if (err) {
@@ -122,7 +126,7 @@ function testToken(contract, address) {
   console.log('Token Address:', address);
 
   // Testing Transfering 17 tokens...
-  testTokenTransferFunction(contract, address, web3.eth.accounts[1], web3.eth.accounts[0], 17);
+  testTokenTransferFunction(contract, address, web3.eth.accounts[4], web3.eth.accounts[3], 17);
 }
 
 function testCrowdsale(crowdContract, crowdsaleAddress, tokenContract, tokenAddress) {

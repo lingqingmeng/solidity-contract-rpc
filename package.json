@@ -1,33 +1,13 @@
 {
-  "name": "liquid",
-  "version": "1.0.0",
-  "description": "Solidity Hello World",
-  "main": "index.js",
-  "scripts": {
-    "start": "babel-node index.js",
-    "build": "babel index.js",
-    "babel-version": "babel --version"
-  },
-  "keywords": [
-    "solidity",
-    "eth",
-    "geth",
-    "ethereum",
-    "parity",
-    "node",
-    "cli"
-  ],
-  "author": "lingqingmeng",
-  "license": "ISC",
-  "dependencies": {
-    "big-number": "^0.4.0",
-    "solc": "^0.4.16",
-    "web3": "0.20.0"
-  },
-  "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-preset-es2015": "^6.9.0",
-    "babel-preset-stage-2": "^6.11.0",
-    "babel-register": "^6.11.6"
-  }
+	"name": "solidity-contract-rpc",
+	"version": "1.0.1",
+	"description": "Soldiity Contract RPC",
+	"scripts": {
+		"start": "node index.js"
+	},
+	"dependencies": {
+		"big-number": "^0.4.0",
+	    "solc": "^0.4.16",
+	    "web3": "0.20.0"
+	}
 }

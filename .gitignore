@@ -2,3 +2,4 @@ node_modules
 package-lock.json
 .node-xmlhttprequest-sync*
 npm-debug.log
+SECURITY.md

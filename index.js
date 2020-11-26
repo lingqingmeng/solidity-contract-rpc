@@ -1,7 +1,7 @@
 const fs = require('fs');
 const Web3 = require('web3');
 // this should be testrpc, run it with $ testrpc
-const web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
+const web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:7545'));
 const compilers = require('./compilers');
 
 // read files and create contracts for Token and Crowdsale
