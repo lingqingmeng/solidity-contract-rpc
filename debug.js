@@ -11,7 +11,7 @@ console.log('tokenGasEstimate: ',tokenGasEstimate)
 
 // 
 let tokenName = 'TemplateToken';
-let tokenSymbol = 'TMPLT';
+let tokenSymbol = 'TTA';
 
 
 let tokenDeployerAddress =  web3.eth.accounts[0];
