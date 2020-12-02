@@ -1,6 +1,6 @@
 const fs = require('fs');
 const Web3 = require('web3');
-// this should be testrpc, run it with $ testrpc
+// this should be a private dev net
 const web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:7545'));
 const compilers = require('./compilers');
 
@@ -73,7 +73,7 @@ const tokenContractInstance = Token.contract.new({
     if (response.address) {
       console.log('Crowdsale contract address: ' + response.address);
       const token = Token.contract.at(res.address);
-      testCrowdSale2(Crowdsale.contract,response.address) 
+      testSale2(Crowdsale.contract,response.address) 
       
     }
   })
@@ -82,7 +82,7 @@ const tokenContractInstance = Token.contract.new({
 
 
 
-function testCrowdSale(contract,address){
+function testSale(contract,address){
   const crowdsale = contract.at(address);
   const goal = crowdsale.checkGoalReached.call();
   console.log('goal:',goal);
@@ -95,7 +95,7 @@ function testCrowdSale(contract,address){
  * @param {uint} etherCostOfEachToken
  * @param {address} addressOfTokenUsedAsReward
  */
-function testCrowdSale2(contract,address) {
+function testSale2(contract,address) {
   const crowdsale = contract.at(address);
   const txObject = {
     from: web3.eth.accounts[5],
@@ -149,7 +149,8 @@ function testAllowances(contract,address) {
 function testContract(contract,address) {
   // Reference to the deployed contract
   const token = contract.at(address);
-  // Destination account for test
+
+  // Destination account for test only address
   const dest_account = '0x002D61B362ead60A632c0e6B43fCff4A7a259285';
 
   // Assert initial account balance, should be 100000
